@@ -1,0 +1,14 @@
+.data-filters {
+    margin-bottom: 20px;
+}
+
+.data-filters label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.data-filters select {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}

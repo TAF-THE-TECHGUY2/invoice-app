@@ -1,0 +1,83 @@
+/* src/pages/AnalyticsPage.css */
+.analytics-page {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.analytics-page h1 {
+    margin-bottom: 30px;
+    color: #333;
+    font-size: 2rem;
+    text-align: center;
+}
+
+/* Center content and add spacing between sections */
+.analytics-page>* {
+    margin-bottom: 30px;
+}
+
+/* Card style for charts and sections */
+.analytics-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Export Options */
+.export-options {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.export-options button {
+    margin: 0 8px;
+    padding: 10px 16px;
+    font-size: 1rem;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.export-options button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Data Filters */
+.data-filters {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.data-filters label {
+    font-weight: 600;
+    margin-right: 10px;
+    font-size: 1rem;
+}
+
+.data-filters select {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+
+    .detailed-chart,
+    .category-breakdown-chart,
+    .trend-comparison-chart,
+    .forecast-chart {
+        width: 100% !important;
+        height: auto !important;
+    }
+}

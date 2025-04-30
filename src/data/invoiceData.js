@@ -1,0 +1,84 @@
+// invoiceData.js
+// Example mock data for demonstration purposes, WITHOUT `difference` & `percentageChange`
+
+const invoiceData = [
+  {
+    month: "2025-01",
+    totalAmount: 1200,
+    breakdown: {
+      Rates: 400,
+      Water: 200,
+      Electricity: 400,
+      Refuse: 100,
+      Sewer: 100
+    }
+  },
+  {
+    month: "2025-02",
+    totalAmount: 1400,
+    breakdown: {
+      Rates: 500,
+      Water: 200,
+      Electricity: 500,
+      Refuse: 100,
+      Sewer: 100
+    }
+  },
+  {
+    month: "2025-03",
+    totalAmount: 900,
+    breakdown: {
+      Rates: 300,
+      Water: 150,
+      Electricity: 300,
+      Refuse: 75,
+      Sewer: 75
+    }
+  },
+  {
+    month: "2025-04",
+    totalAmount: 1600,
+    breakdown: {
+      Rates: 600,
+      Water: 200,
+      Electricity: 500,
+      Refuse: 150,
+      Sewer: 150
+    }
+  },
+  {
+    month: "2025-05",
+    totalAmount: 1100,
+    breakdown: {
+      Rates: 400,
+      Water: 200,
+      Electricity: 300,
+      Refuse: 100,
+      Sewer: 100
+    }
+  },
+  {
+    month: "2025-06",
+    totalAmount: 1800,
+    breakdown: {
+      Rates: 700,
+      Water: 300,
+      Electricity: 500,
+      Refuse: 150,
+      Sewer: 150
+    }
+  },
+  {
+    month: "2025-07",
+    totalAmount: 2000,
+    breakdown: {
+      Rates: 800,
+      Water: 350,
+      Electricity: 550,
+      Refuse: 150,
+      Sewer: 150
+    }
+  }
+];
+
+export default invoiceData;

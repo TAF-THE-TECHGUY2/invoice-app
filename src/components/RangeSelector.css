@@ -1,0 +1,32 @@
+.range-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.calendar-icon {
+    font-size: 1.5rem;
+    color: #007bff;
+}
+
+.range-button {
+    padding: 8px 12px;
+    font-size: 1rem;
+    background-color: #e9ecef;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.range-button.active {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.range-button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}

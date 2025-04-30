@@ -1,0 +1,42 @@
+.invoice-table-section {
+    margin: var(--spacing-xl) 0;
+}
+
+/* Make table responsive with horizontal scroll if needed */
+.table-responsive {
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.invoice-table thead {
+    background-color: var(--color-muted);
+}
+
+.invoice-table th,
+.invoice-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.invoice-table tbody tr:nth-child(even) {
+    background-color: var(--color-light);
+}
+
+/* Positive / Negative Indication */
+.positive-change {
+    color: var(--color-secondary-dark);
+    font-weight: 500;
+}
+
+.negative-change {
+    color: var(--color-danger-dark);
+    font-weight: 500;
+}
