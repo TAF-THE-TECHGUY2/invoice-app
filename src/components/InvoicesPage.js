@@ -129,7 +129,7 @@ const InvoicesPage = () => {
           <tr>
             <th onClick={() => requestSort('invoiceNumber')}>Invoice Number</th>
             <th onClick={() => requestSort('month')}>Month</th>
-            <th onClick={() => requestSort('accountNumber')}>Account Number</th>
+            
             <th onClick={() => requestSort('totalAmount')}>Total Amount (R)</th>
             <th onClick={() => requestSort('dueDate')}>Due Date</th>
             <th>PDF</th>

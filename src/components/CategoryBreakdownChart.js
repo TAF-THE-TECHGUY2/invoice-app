@@ -29,14 +29,25 @@ const CategoryBreakdownChart = ({ invoices }) => {
   return (
     <div className="category-breakdown-chart">
       <h2>Category Breakdown</h2>
-      <PieChart width={400} height={300}>
-        <Pie data={aggregated} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+      <PieChart width={600} height={350}>
+        <Pie
+          data={aggregated}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          outerRadius={100}
+          label={({ name, value }) => `${name}: R ${value.toFixed(2)}`}
+        >
           {aggregated.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip />
-        <Legend />
+        <Tooltip
+          formatter={(value) => [`R ${value.toFixed(2)}`, 'Amount']}
+          labelFormatter={(label) => `Category: ${label}`}
+        />
+        <Legend layout="horizontal" verticalAlign="bottom" align="center" />
       </PieChart>
     </div>
   );

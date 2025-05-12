@@ -1,22 +1,19 @@
-// src/pages/InvoicesPage.js
 import React, { useContext, useState, useMemo } from 'react';
 import InvoiceContext from '../../context/InvoiceContext';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import './InvoicesPage.css';
 
-// Helper function to clean invoice number (remove trailing "Next" if present)
 const cleanInvoiceNumber = (invoiceNumber) => {
   if (!invoiceNumber) return 'N/A';
   return invoiceNumber.replace(/Next$/i, '').trim();
 };
 
-// Helper function to format a number as currency (e.g., "R54 981.75")
 const formatCurrency = (number) => {
   if (number === null || number === undefined) return 'R0.00';
   return 'R' + number.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 };
 
-// Helper function to format dueDate as "Mon DD, YYYY"
-// Expects dueDate in "YYYY/MM/DD" format.
 const formatMonthDayYear = (dueDate) => {
   if (!dueDate) return 'N/A';
   const parts = dueDate.split('/');
@@ -28,38 +25,25 @@ const formatMonthDayYear = (dueDate) => {
 };
 
 const InvoicesPage = () => {
-  const { invoices } = useContext(InvoiceContext); // Get invoices from context
+  const { invoices } = useContext(InvoiceContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  // Filter invoices based on search term (searching in invoiceNumber and accountNumber)
-  const filteredInvoices = invoices.filter((invoice) =>
-    cleanInvoiceNumber(invoice.invoiceNumber || '')
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()) ||
-    (invoice.accountNumber || '')
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  const filteredInvoices = invoices.filter((invoice) => {
+    const matchesSearch =
+      cleanInvoiceNumber(invoice.invoiceNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (invoice.dueDate || '').toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
 
-  // Sorting logic; for breakdown fields, use values from the breakdown object
   const sortedInvoices = useMemo(() => {
     let sortable = [...filteredInvoices];
     if (sortConfig.key) {
       sortable.sort((a, b) => {
-        let aValue, bValue;
-        if (['Rates', 'Electricity', 'Water', 'Refuse', 'Sewer'].includes(sortConfig.key)) {
-          aValue = a.breakdown ? a.breakdown[sortConfig.key] || 0 : 0;
-          bValue = b.breakdown ? b.breakdown[sortConfig.key] || 0 : 0;
-        } else if (sortConfig.key === 'invoiceNumber') {
-          aValue = cleanInvoiceNumber(a.invoiceNumber);
-          bValue = cleanInvoiceNumber(b.invoiceNumber);
-        } else {
-          aValue = a[sortConfig.key] || 0;
-          bValue = b[sortConfig.key] || 0;
-        }
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
         if (typeof aValue === 'string') {
           aValue = aValue.toLowerCase();
           bValue = bValue.toLowerCase();
@@ -72,7 +56,6 @@ const InvoicesPage = () => {
     return sortable;
   }, [filteredInvoices, sortConfig]);
 
-  // Pagination logic
   const totalPages = Math.ceil(sortedInvoices.length / pageSize);
   const paginatedInvoices = sortedInvoices.slice(
     (currentPage - 1) * pageSize,
@@ -87,29 +70,32 @@ const InvoicesPage = () => {
     setSortConfig({ key, direction });
   };
 
-  // Export invoice data to CSV (including Month & Day with Year)
   const exportToCSV = () => {
     const header = [
       'Invoice Number',
-      'Month & Day, Year',
-      'Account Number',
+      'Date',
       'Rates Amount',
       'Electricity Amount',
       'Water Amount',
       'Refuse Amount',
       'Sewer Amount',
-      'Total Amount'
+      'Total Amount',
+      'Previous Balance',
+      'Payment Status',
+      'Balance Difference'
     ];
     const rows = sortedInvoices.map((inv) => [
       cleanInvoiceNumber(inv.invoiceNumber),
       formatMonthDayYear(inv.dueDate),
-      inv.accountNumber || '',
       formatCurrency(inv.breakdown?.Rates || 0),
       formatCurrency(inv.breakdown?.Electricity || 0),
       formatCurrency(inv.breakdown?.Water || 0),
       formatCurrency(inv.breakdown?.Refuse || 0),
       formatCurrency(inv.breakdown?.Sewer || 0),
-      formatCurrency(inv.totalAmount || 0)
+      formatCurrency(inv.totalAmount || 0),
+      formatCurrency(inv.previousBalance || 0),
+      inv.paymentStatus || '',
+      formatCurrency(inv.balanceDifference || 0)
     ]);
     const csvContent = [header, ...rows].map((e) => e.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -122,12 +108,37 @@ const InvoicesPage = () => {
     document.body.removeChild(link);
   };
 
-  // Dummy PDF export (to be implemented)
   const exportToPDF = () => {
-    alert('Export to PDF functionality to be implemented.');
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Invoice Report', 14, 16);
+    const tableData = sortedInvoices.map((inv) => [
+      cleanInvoiceNumber(inv.invoiceNumber),
+      formatMonthDayYear(inv.dueDate),
+      formatCurrency(inv.breakdown?.Rates || 0),
+      formatCurrency(inv.breakdown?.Electricity || 0),
+      formatCurrency(inv.breakdown?.Water || 0),
+      formatCurrency(inv.breakdown?.Refuse || 0),
+      formatCurrency(inv.breakdown?.Sewer || 0),
+      formatCurrency(inv.totalAmount || 0),
+      formatCurrency(inv.previousBalance || 0),
+      inv.paymentStatus || '',
+      formatCurrency(inv.balanceDifference || 0)
+    ]);
+
+    doc.autoTable({
+      startY: 22,
+      head: [[
+        'Invoice #', 'Date', 'Rates', 'Electricity',
+        'Water', 'Refuse', 'Sewer', 'Total', 'Prev. Balance', 'Status', 'Balance Diff'
+      ]],
+      body: tableData,
+      styles: { fontSize: 8 },
+    });
+
+    doc.save('invoices.pdf');
   };
 
-  // Download original PDF (expects each invoice object to include a pdfUrl property)
   const downloadInvoicePDF = (invoice) => {
     if (invoice.pdfUrl) {
       const link = document.createElement('a');
@@ -145,68 +156,77 @@ const InvoicesPage = () => {
     <div className="invoices-page">
       <h1>Invoices</h1>
 
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search by Invoice Number or Date"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+
       <div className="export-buttons">
         <button onClick={exportToCSV}>Export CSV</button>
         <button onClick={exportToPDF}>Export PDF</button>
       </div>
 
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Search by Invoice Number or Account Number..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1); // Reset to first page when searching
-          }}
-        />
+      <div className="table-container">
+        <table className="invoice-table">
+          <thead>
+            <tr>
+              <th onClick={() => requestSort('invoiceNumber')}>Invoice</th>
+              <th onClick={() => requestSort('dueDate')}>Date</th>
+              <th>Rates</th>
+              <th>Electricity</th>
+              <th>Water</th>
+              <th>Refuse</th>
+              <th>Sewer</th>
+              <th>Total</th>
+              <th>Prev. Bal</th>
+              <th>Status</th>
+              
+              <th>PDF</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedInvoices.map((inv, index) => (
+              <tr
+                key={index}
+                className={inv.totalAmount > 100000 ? 'highlight-row' : ''}
+              >
+                <td>{cleanInvoiceNumber(inv.invoiceNumber)}</td>
+                <td>{formatMonthDayYear(inv.dueDate)}</td>
+                <td>{formatCurrency(inv.breakdown?.Rates || 0)}</td>
+                <td>{formatCurrency(inv.breakdown?.Electricity || 0)}</td>
+                <td>{formatCurrency(inv.breakdown?.Water || 0)}</td>
+                <td>{formatCurrency(inv.breakdown?.Refuse || 0)}</td>
+                <td>{formatCurrency(inv.breakdown?.Sewer || 0)}</td>
+                <td>{formatCurrency(inv.totalAmount)}</td>
+                <td>{formatCurrency(inv.previousBalance || 0)}</td>
+                <td>
+                  <span className={`status-badge ${inv.paymentStatus === 'Paid' ? 'paid' : 'unpaid'}`}>
+                    {inv.paymentStatus === 'Paid' ? '✅ Paid' : '❌ Not Paid'}
+                  </span>
+                </td>
+               
+                <td>
+                  <button onClick={() => downloadInvoicePDF(inv)} className="download-btn">
+                    Download PDF
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <table className="invoice-table">
-        <thead>
-          <tr>
-            <th onClick={() => requestSort('invoiceNumber')}>Invoice Number</th>
-            <th onClick={() => requestSort('accountNumber')}>Account Number</th>
-            <th onClick={() => requestSort('Rates')}>Rates Amount (R)</th>
-            <th onClick={() => requestSort('Electricity')}>Electricity Amount (R)</th>
-            <th onClick={() => requestSort('Water')}>Water Amount (R)</th>
-            <th onClick={() => requestSort('Refuse')}>Refuse Amount (R)</th>
-            <th onClick={() => requestSort('Sewer')}>Sewer Amount (R)</th>
-            <th onClick={() => requestSort('totalAmount')}>Total Amount (R)</th>
-            <th>PDF</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedInvoices.map((inv, index) => (
-            <tr key={index}>
-              <td>{cleanInvoiceNumber(inv.invoiceNumber)}</td>
-              <td>{formatMonthDayYear(inv.dueDate)}</td>
-              <td>{formatCurrency(inv.breakdown?.Rates || 0)}</td>
-              <td>{formatCurrency(inv.breakdown?.Electricity || 0)}</td>
-              <td>{formatCurrency(inv.breakdown?.Water || 0)}</td>
-              <td>{formatCurrency(inv.breakdown?.Refuse || 0)}</td>
-              <td>{formatCurrency(inv.breakdown?.Sewer || 0)}</td>
-              <td>{formatCurrency(inv.totalAmount)}</td>
-              <td>
-                <button onClick={() => downloadInvoicePDF(inv)} className="download-btn">
-                  Download PDF
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
       <div className="pagination">
-        <button disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => prev - 1)}>
-          Prev
-        </button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => prev + 1)}>
-          Next
-        </button>
+        <button disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => prev - 1)}>Prev</button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => prev + 1)}>Next</button>
       </div>
     </div>
   );

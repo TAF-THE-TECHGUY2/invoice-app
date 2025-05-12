@@ -57,6 +57,8 @@ const InvoiceProvider = ({ children }) => {
       }
     }
 
+    
+
     fetchInvoices();
   }, []);
 
