@@ -78,7 +78,6 @@ const InvoicesPage = () => {
       'Electricity Amount',
       'Water Amount',
       'Refuse Amount',
-      'Sewer Amount',
       'Total Amount',
       'Previous Balance',
       'Payment Status',
@@ -130,7 +129,7 @@ const InvoicesPage = () => {
       startY: 22,
       head: [[
         'Invoice #', 'Date', 'Rates', 'Electricity',
-        'Water', 'Refuse', 'Sewer', 'Total', 'Prev. Balance', 'Status', 'Balance Diff'
+        'Water', 'Refuse',  'Total', 'Prev. Balance', 'Status', 'Balance Diff'
       ]],
       body: tableData,
       styles: { fontSize: 8 },
@@ -183,7 +182,6 @@ const InvoicesPage = () => {
               <th>Electricity</th>
               <th>Water</th>
               <th>Refuse</th>
-              <th>Sewer</th>
               <th>Total</th>
               <th>Prev. Bal</th>
               <th>Status</th>
@@ -203,7 +201,6 @@ const InvoicesPage = () => {
                 <td>{formatCurrency(inv.breakdown?.Electricity || 0)}</td>
                 <td>{formatCurrency(inv.breakdown?.Water || 0)}</td>
                 <td>{formatCurrency(inv.breakdown?.Refuse || 0)}</td>
-                <td>{formatCurrency(inv.breakdown?.Sewer || 0)}</td>
                 <td>{formatCurrency(inv.totalAmount)}</td>
                 <td>{formatCurrency(inv.previousBalance || 0)}</td>
                 <td>
