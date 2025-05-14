@@ -19,42 +19,46 @@ const getMonthYearKey = (dueDate) => {
 };
 
 const DashboardPage = () => {
-  const { invoices } = useContext(InvoiceContext);
+  const { invoices, selectedAccount } = useContext(InvoiceContext);
   const [range, setRange] = useState(1); // Options: 1, 3, 6, 9, 12
 
-  // Group invoices by month-year key
+  // 1) Filter by selected account, 2) group by month-year, 3) pick last `range` groups
   const filteredInvoices = useMemo(() => {
     if (!invoices || invoices.length === 0) return [];
-    const groups = invoices.reduce((acc, inv) => {
+
+    // --- account filter ---
+    const byAccount = selectedAccount
+      ? invoices.filter(inv => inv.accountNumber === selectedAccount)
+      : invoices;
+
+    // --- group by month-year ---
+    const groups = byAccount.reduce((acc, inv) => {
       const key = getMonthYearKey(inv.dueDate);
       if (key) {
-        if (!acc[key]) {
-          acc[key] = [];
-        }
+        if (!acc[key]) acc[key] = [];
         acc[key].push(inv);
       }
       return acc;
     }, {});
-    
-    // Sort keys descending (most recent first)
+
+    // --- sort keys descending (most recent first) ---
     const sortedKeys = Object.keys(groups).sort(
       (a, b) => new Date(b + '-01') - new Date(a + '-01')
     );
-    
-    // Select the top "range" keys
+
+    // --- pick top N months ---
     const selectedKeys = sortedKeys.slice(0, range);
-    console.log(`Selected keys for range ${range}:`, selectedKeys);
-    
-    // Flatten the invoices from the selected groups
-    const result = selectedKeys.flatMap(key => groups[key]);
-    console.log("Filtered Invoices:", result);
-    return result;
-  }, [invoices, range]);
+
+    // --- flatten invoices from those months ---
+    return selectedKeys.flatMap(key => groups[key]);
+  }, [invoices, selectedAccount, range]);
 
   return (
     <div className="dashboard-container">
       <RangeSelector range={range} setRange={setRange} />
+
       <InvoiceSummary invoices={filteredInvoices} />
+
       <div className="charts-row">
         <div className="chart-column">
           <h3>Monthly Invoice Trends</h3>
@@ -65,6 +69,7 @@ const DashboardPage = () => {
           <CategoryChart invoices={filteredInvoices} />
         </div>
       </div>
+
       <div className="table-section">
         <h3>COJ Invoice Data</h3>
         <InvoiceTable invoices={filteredInvoices} />

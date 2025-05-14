@@ -1,3 +1,4 @@
+// src/pages/InvoicesPage.js
 import React, { useContext, useState, useMemo } from 'react';
 import InvoiceContext from '../../context/InvoiceContext';
 import jsPDF from 'jspdf';
@@ -19,25 +20,38 @@ const formatMonthDayYear = (dueDate) => {
   const parts = dueDate.split('/');
   if (parts.length !== 3) return dueDate;
   const [year, monthNum, day] = parts;
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
   const monthName = monthNames[parseInt(monthNum, 10) - 1] || monthNum;
   return `${monthName} ${day}, ${year}`;
 };
 
 const InvoicesPage = () => {
-  const { invoices } = useContext(InvoiceContext);
+  const { invoices, selectedAccount } = useContext(InvoiceContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const filteredInvoices = invoices.filter((invoice) => {
-    const matchesSearch =
-      cleanInvoiceNumber(invoice.invoiceNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (invoice.dueDate || '').toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  // 1) Filter by selected account, 2) then by search term
+  const filteredInvoices = useMemo(() => {
+    // 1) account filter
+    const byAccount = selectedAccount
+      ? invoices.filter(inv => inv.accountNumber === selectedAccount)
+      : invoices;
 
+    // 2) search filter
+    const term = searchTerm.toLowerCase();
+    return byAccount.filter((invoice) => {
+      const invNum = cleanInvoiceNumber(invoice.invoiceNumber || '').toLowerCase();
+      const due    = (invoice.dueDate || '').toLowerCase();
+      return invNum.includes(term) || due.includes(term);
+    });
+  }, [invoices, selectedAccount, searchTerm]);
+
+  // sorting
   const sortedInvoices = useMemo(() => {
     let sortable = [...filteredInvoices];
     if (sortConfig.key) {
@@ -70,78 +84,68 @@ const InvoicesPage = () => {
     setSortConfig({ key, direction });
   };
 
+  // Export CSV
   const exportToCSV = () => {
     const header = [
-      'Invoice Number',
-      'Date',
-      'Rates Amount',
-      'Electricity Amount',
-      'Water Amount',
-      'Refuse Amount',
-      'Total Amount',
-      'Previous Balance',
-      'Payment Status',
-      'Balance Difference'
+      'Invoice Number','Date','Rates','Electricity',
+      'Water','Refuse','Total','Prev. Balance','Status','Balance Diff'
     ];
-    const rows = sortedInvoices.map((inv) => [
+    const rows = sortedInvoices.map(inv => [
       cleanInvoiceNumber(inv.invoiceNumber),
       formatMonthDayYear(inv.dueDate),
-      formatCurrency(inv.breakdown?.Rates || 0),
+      formatCurrency(inv.breakdown?.Rates  || 0),
       formatCurrency(inv.breakdown?.Electricity || 0),
       formatCurrency(inv.breakdown?.Water || 0),
       formatCurrency(inv.breakdown?.Refuse || 0),
-      formatCurrency(inv.breakdown?.Sewer || 0),
-      formatCurrency(inv.totalAmount || 0),
+      formatCurrency(inv.totalAmount   || 0),
       formatCurrency(inv.previousBalance || 0),
       inv.paymentStatus || '',
       formatCurrency(inv.balanceDifference || 0)
     ]);
-    const csvContent = [header, ...rows].map((e) => e.join(',')).join('\n');
+    const csvContent = [header, ...rows].map(e => e.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    const url  = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'invoices.csv');
+    link.href    = url;
+    link.download = 'invoices.csv';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  // Export PDF
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text('Invoice Report', 14, 16);
-    const tableData = sortedInvoices.map((inv) => [
+    const tableData = sortedInvoices.map(inv => [
       cleanInvoiceNumber(inv.invoiceNumber),
       formatMonthDayYear(inv.dueDate),
-      formatCurrency(inv.breakdown?.Rates || 0),
+      formatCurrency(inv.breakdown?.Rates  || 0),
       formatCurrency(inv.breakdown?.Electricity || 0),
       formatCurrency(inv.breakdown?.Water || 0),
       formatCurrency(inv.breakdown?.Refuse || 0),
-      formatCurrency(inv.breakdown?.Sewer || 0),
-      formatCurrency(inv.totalAmount || 0),
+      formatCurrency(inv.totalAmount   || 0),
       formatCurrency(inv.previousBalance || 0),
       inv.paymentStatus || '',
       formatCurrency(inv.balanceDifference || 0)
     ]);
-
     doc.autoTable({
       startY: 22,
       head: [[
-        'Invoice #', 'Date', 'Rates', 'Electricity',
-        'Water', 'Refuse',  'Total', 'Prev. Balance', 'Status', 'Balance Diff'
+        'Invoice #','Date','Rates','Electricity',
+        'Water','Refuse','Total','Prev. Bal','Status','Balance Diff'
       ]],
       body: tableData,
       styles: { fontSize: 8 },
     });
-
     doc.save('invoices.pdf');
   };
 
   const downloadInvoicePDF = (invoice) => {
     if (invoice.pdfUrl) {
       const link = document.createElement('a');
-      link.href = invoice.pdfUrl;
+      link.href    = invoice.pdfUrl;
       link.download = `${cleanInvoiceNumber(invoice.invoiceNumber)}.pdf`;
       document.body.appendChild(link);
       link.click();
@@ -185,14 +189,13 @@ const InvoicesPage = () => {
               <th>Total</th>
               <th>Prev. Bal</th>
               <th>Status</th>
-              
               <th>PDF</th>
             </tr>
           </thead>
           <tbody>
-            {paginatedInvoices.map((inv, index) => (
+            {paginatedInvoices.map((inv, idx) => (
               <tr
-                key={index}
+                key={idx}
                 className={inv.totalAmount > 100000 ? 'highlight-row' : ''}
               >
                 <td>{cleanInvoiceNumber(inv.invoiceNumber)}</td>
@@ -204,13 +207,19 @@ const InvoicesPage = () => {
                 <td>{formatCurrency(inv.totalAmount)}</td>
                 <td>{formatCurrency(inv.previousBalance || 0)}</td>
                 <td>
-                  <span className={`status-badge ${inv.paymentStatus === 'Paid' ? 'paid' : 'unpaid'}`}>
+                  <span
+                    className={`status-badge ${
+                      inv.paymentStatus === 'Paid' ? 'paid' : 'unpaid'
+                    }`}
+                  >
                     {inv.paymentStatus === 'Paid' ? '✅ Paid' : '❌ Not Paid'}
                   </span>
                 </td>
-               
                 <td>
-                  <button onClick={() => downloadInvoicePDF(inv)} className="download-btn">
+                  <button
+                    onClick={() => downloadInvoicePDF(inv)}
+                    className="download-btn"
+                  >
                     Download PDF
                   </button>
                 </td>
@@ -221,9 +230,19 @@ const InvoicesPage = () => {
       </div>
 
       <div className="pagination">
-        <button disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => prev - 1)}>Prev</button>
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(prev => prev - 1)}
+        >
+          Prev
+        </button>
         <span>Page {currentPage} of {totalPages}</span>
-        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => prev + 1)}>Next</button>
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(prev => prev + 1)}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

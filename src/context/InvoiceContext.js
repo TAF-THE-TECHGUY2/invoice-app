@@ -5,8 +5,8 @@ const InvoiceContext = createContext();
 
 export const InvoiceProvider = ({ children }) => {
   const [invoices, setInvoices] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(''); // Add selected account
 
-  // Fetch invoice data from backend API or static file in public folder
   useEffect(() => {
     fetch('http://localhost:5000/api/invoices')
       .then((res) => res.json())
@@ -15,7 +15,7 @@ export const InvoiceProvider = ({ children }) => {
   }, []);
 
   return (
-    <InvoiceContext.Provider value={{ invoices, setInvoices }}>
+    <InvoiceContext.Provider value={{ invoices, setInvoices, selectedAccount, setSelectedAccount }}>
       {children}
     </InvoiceContext.Provider>
   );
