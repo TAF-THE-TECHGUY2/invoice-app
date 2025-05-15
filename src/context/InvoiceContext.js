@@ -1,5 +1,5 @@
 // src/context/InvoiceContext.js
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from "react";
 
 const InvoiceContext = createContext();
 
@@ -8,10 +8,10 @@ export const InvoiceProvider = ({ children }) => {
   const [selectedAccount, setSelectedAccount] = useState(''); // Add selected account
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/invoices')
+    fetch("http://localhost:5001/api/invoices")
       .then((res) => res.json())
       .then((data) => setInvoices(data))
-      .catch((error) => console.error('Error loading invoice data', error));
+      .catch((error) => console.error("Error loading invoice data", error));
   }, []);
 
   return (

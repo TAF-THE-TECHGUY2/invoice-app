@@ -6,18 +6,18 @@ import 'jspdf-autotable';
 import './InvoicesPage.css';
 
 const cleanInvoiceNumber = (invoiceNumber) => {
-  if (!invoiceNumber) return 'N/A';
-  return invoiceNumber.replace(/Next$/i, '').trim();
+  if (!invoiceNumber) return "N/A";
+  return invoiceNumber.replace(/Next$/i, "").trim();
 };
 
 const formatCurrency = (number) => {
-  if (number === null || number === undefined) return 'R0.00';
-  return 'R' + number.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  if (number === null || number === undefined) return "R0.00";
+  return "R" + number.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 };
 
 const formatMonthDayYear = (dueDate) => {
-  if (!dueDate) return 'N/A';
-  const parts = dueDate.split('/');
+  if (!dueDate) return "N/A";
+  const parts = dueDate.split("/");
   if (parts.length !== 3) return dueDate;
   const [year, monthNum, day] = parts;
   const monthNames = [
@@ -53,22 +53,29 @@ const InvoicesPage = () => {
 
   // sorting
   const sortedInvoices = useMemo(() => {
-    let sortable = [...filteredInvoices];
+    let sortable = [...invoices];
     if (sortConfig.key) {
       sortable.sort((a, b) => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
-        if (typeof aValue === 'string') {
+
+        if (sortConfig.key === "dueDate") {
+          aValue = new Date(aValue);
+          bValue = new Date(bValue);
+        } else if (typeof aValue === "string" && typeof bValue === "string") {
           aValue = aValue.toLowerCase();
           bValue = bValue.toLowerCase();
         }
-        if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+
+        if (aValue < bValue)
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        if (aValue > bValue)
+          return sortConfig.direction === "ascending" ? 1 : -1;
         return 0;
       });
     }
     return sortable;
-  }, [filteredInvoices, sortConfig]);
+  }, [invoices, sortConfig]);
 
   const totalPages = Math.ceil(sortedInvoices.length / pageSize);
   const paginatedInvoices = sortedInvoices.slice(
@@ -77,9 +84,9 @@ const InvoicesPage = () => {
   );
 
   const requestSort = (key) => {
-    let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
     }
     setSortConfig({ key, direction });
   };
@@ -151,7 +158,7 @@ const InvoicesPage = () => {
       link.click();
       document.body.removeChild(link);
     } else {
-      alert('PDF not available for this invoice.');
+      alert("PDF not available for this invoice.");
     }
   };
 
@@ -159,35 +166,23 @@ const InvoicesPage = () => {
     <div className="invoices-page">
       <h1>Invoices</h1>
 
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Search by Invoice Number or Date"
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
-      </div>
-
       <div className="export-buttons">
         <button onClick={exportToCSV}>Export CSV</button>
-        <button onClick={exportToPDF}>Export PDF</button>
+        {/* <button onClick={exportToPDF}>Export PDF</button> */}
       </div>
 
       <div className="table-container">
         <table className="invoice-table">
           <thead>
             <tr>
-              <th onClick={() => requestSort('invoiceNumber')}>Invoice</th>
-              <th onClick={() => requestSort('dueDate')}>Date</th>
+              <th>Invoice</th>
+              <th>Date</th>
               <th>Rates</th>
               <th>Electricity</th>
               <th>Water</th>
               <th>Refuse</th>
               <th>Total</th>
-              <th>Prev. Bal</th>
+              <th>Incoming payment</th>
               <th>Status</th>
               <th>PDF</th>
             </tr>
@@ -205,7 +200,7 @@ const InvoicesPage = () => {
                 <td>{formatCurrency(inv.breakdown?.Water || 0)}</td>
                 <td>{formatCurrency(inv.breakdown?.Refuse || 0)}</td>
                 <td>{formatCurrency(inv.totalAmount)}</td>
-                <td>{formatCurrency(inv.previousBalance || 0)}</td>
+                <td>{formatCurrency(inv.incomingPayment || 0)}</td>
                 <td>
                   <span
                     className={`status-badge ${
