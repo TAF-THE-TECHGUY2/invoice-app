@@ -10,6 +10,7 @@ const CategoryChart = ({ invoices }) => {
       Water: 0,
       Refuse: 0,
       Sewer: 0,
+      
     };
     invoices.forEach(inv => {
       if (inv.breakdown) {

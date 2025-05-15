@@ -19,7 +19,7 @@ const generateMonthRange = (startDate, endDate) => {
   const last = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
 
   while (current <= last) {
-    const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`; // e.g. 2024-05
+    const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`; 
     range.push({ key, label: formatMonthLabel(current), date: new Date(current) });
     current.setMonth(current.getMonth() + 1);
   }
